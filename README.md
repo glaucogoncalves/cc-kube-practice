@@ -108,7 +108,32 @@ sudo swapoff -a
 sudo apt update
 ```
 
-Crie os 
+Crie os documentos executaveis `containerd-install.sh` e `k8s-install.sh` e cole o conteúdo no arquivo
+
+```bash
+vim ./containerd-install.ssh
+``` 
+Torne o arquivo executavel
+```bash
+chmod u+x ./containerd-install.sh
+```
+Execute e depois cheque os status, deve estar "activate"
+```bash
+service containerd status
+``` 
+
+repita este processo para o kubernetes
+```bash
+vim ./k8s-install.ssh
+``` 
+
+```bash
+chmod u+x ./k8s-install.sh
+```
+
+```bash
+service kubelet status
+``` 
 
 ### 2.2 Inicializando o Cluster Kubernetes no Control Plane
 
