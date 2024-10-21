@@ -1,10 +1,8 @@
-# **Kubernetes Cluster com PHP/MySQL no AWS EC2**
+# **Kubernetes Cluster no AWS EC2**
 
-Este repositório contém instruções detalhadas para configurar e implantar um cluster Kubernetes no AWS usando instâncias EC2, com uma aplicação PHP/MySQL como exemplo. A configuração envolve a criação da infraestrutura, instalação do Kubernetes e a implantação dos serviços.
+Esta prática foi elaborada como um exercício da disciplina [Computação em Nuvem](https://github.com/glaucogoncalves/cc) ofertada no ãmbito do PPGEE/UFPA.
 
-
-Para informações mais detalhadas, acesse o documento da aula
----
+A atividade trabalha a configuração e implantação de um cluster Kubernetes na AWS usando instâncias EC2, bem como a implantação de uma aplicação PHP/MySQL, como exemplo. A configuração envolve a criação da infraestrutura na AWS, instalação do Kubernetes e a implantação da aplicação.
 
 ## **Sumário**
 
@@ -34,15 +32,17 @@ Para informações mais detalhadas, acesse o documento da aula
 
 - Conta AWS ativa.
 - **Chave PEM** (arquivo `.pem`) gerada durante a criação das instâncias EC2.
-- Familiaridade com SSH e comandos de linha de comando.
+- Familiaridade com SSH e comandos de shell no linux.
 
 ---
 
 ## **1. Criando e Configurando a Infraestrutura no AWS**
 ### 1.1 Criando Grupos de Segurança
 
+Nesta primeira etapa criaremos duas Virtual Private Cloud (VPC) na AWS, as quais permitirão a criação de uma rede isolada entre as intâncias que criaremos posteriormente.
+
 1. **Acesse o Console AWS** e vá para **VPC > Security Groups**.
-2. **Crie dois grupos de segurança**:
+2. **Crie dois grupos de segurança e configure as inbound rules**:
    - **Control Plane Security Group**:
      - SSH (porta 22): `0.0.0.0/0`
      - TCP (porta 6443): `0.0.0.0/0`
@@ -51,7 +51,7 @@ Para informações mais detalhadas, acesse o documento da aula
      - SSH (porta 22): `0.0.0.0/0`
      - TCP (porta 10250): CIDR da VPC
      - TCP (portas 30000-32767): `0.0.0.0/0`
-   - **Outbound rule tanto na vpc do control plane quanto na worker**:
+3. **Defina a outbound rule tanto na vpc do control plane quanto na worker**:
    - All traffic `0.0.0.0/0`
 
 ### 1.2 Criando Instâncias EC2
@@ -64,16 +64,16 @@ Para informações mais detalhadas, acesse o documento da aula
 
 ### 1.3 Conectando-se via SSH
 
-Para conectar-se a uma instância EC2 via SSH:
-
-```bash
-ssh -i /caminho/para/sua-chave.pem ubuntu@<IP-PUBLICO-DA-EC2>
-```
-
 Certifique-se de que as permissões da chave .pem estão configuradas corretamente:
 
 ```bash
 chmod 400 /caminho/para/sua-chave.pem
+```
+
+Para conectar-se a uma instância EC2 via SSH:
+
+```bash
+ssh -i /caminho/para/sua-chave.pem ubuntu@<IP-PUBLICO-DA-EC2>
 ```
 
 ## **2. Instalando o Kubernetes**
@@ -90,16 +90,12 @@ sudo vim /etc/hosts
 No terminal, substituiremos o ip por um nome de host amigável. Execute o comando a seguir, mas substitua control-plane por worker1 e worker2 , ao executar em terminais respectivos.
 
 ```bash
-sudo hostnamectl set-hostname control-plane
-```
-```bash
-sudo hostnamectl set-hostname worker1
-```
-```bash
-sudo hostnamectl set-hostname worker2
+$ sudo hostnamectl set-hostname control-plane
+$ sudo hostnamectl set-hostname worker1
+$ sudo hostnamectl set-hostname worker2
 ```
 
-Saia e entre novamente nas máquinas para aparecer os nomes
+Desconecte-se do SSH e conecte-se novamente para que os novos nomes apareçam.
 
 Execute os seguintes comandos em todas as instâncias EC2 (Control Plane e Workers):
 
@@ -111,7 +107,7 @@ sudo apt update
 Crie os documentos executaveis `containerd-install.sh` e `k8s-install.sh` e cole o conteúdo no arquivo
 
 ```bash
-vim ./containerd-install.ssh
+vim ./containerd-install.sh
 ``` 
 Torne o arquivo executavel
 ```bash
