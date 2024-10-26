@@ -11,9 +11,10 @@ A atividade trabalha a configuração e implantação de um cluster Kubernetes n
   - [**Sumário**](#sumário)
   - [**Pré-requisitos**](#pré-requisitos)
   - [**1. Criando e Configurando a Infraestrutura no AWS**](#1-criando-e-configurando-a-infraestrutura-no-aws)
-    - [1.1 Criando Grupos de Segurança](#11-criando-grupos-de-segurança)
-    - [1.2 Criando Instâncias EC2](#12-criando-instâncias-ec2)
-    - [1.3 Conectando-se via SSH](#13-conectando-se-via-ssh)
+    - [1.1 Criando uma VPC](#11-criando-uma-vpc-personalizada)
+    - [1.2 Criando Grupos de Segurança](#12-criando-grupos-de-segurança)
+    - [1.3 Criando Instâncias EC2](#13-criando-instâncias-ec2)
+    - [1.4 Conectando-se via SSH](#14-conectando-se-via-ssh)
   - [**2. Instalando o Kubernetes**](#2-instalando-o-kubernetes)
     - [2.1 Instalando containerd](#21-instalando-containerd)
     - [Opcional](#opcional)
@@ -37,7 +38,67 @@ A atividade trabalha a configuração e implantação de um cluster Kubernetes n
 ---
 
 ## **1. Criando e Configurando a Infraestrutura no AWS**
-### 1.1 Criando Grupos de Segurança
+
+
+
+### 1.1 Criando uma VPC Personalizada
+
+Nesta etapa, criaremos uma VPC (Virtual Private Cloud) personalizada para isolar nossa infraestrutura e ter um melhor controle sobre a rede.
+
+1. Acesse o **Console AWS**.
+2. Vá para **VPC > Your VPCs**.
+3. Clique em **Create VPC**.
+4. Defina os seguintes parâmetros:
+   - **Name tag**: `KubernetesVPC`
+   - **IPv4 CIDR block**: `10.0.0.0/16`
+   - **Tenancy**: `Default`
+5. Clique em **Create**.
+
+#### Criando Sub-redes:
+
+1. Vá para **Subnets** e clique em **Create subnet**.
+2. Crie duas sub-redes em diferentes zonas de disponibilidade:
+
+   - **Subnet 1**:
+     - **Name tag**: `PublicSubnet1`
+     - **VPC**: Selecione `KubernetesVPC`
+     - **Availability Zone**: Escolha uma zona (por exemplo, `us-east-1a`)
+     - **IPv4 CIDR block**: `10.0.1.0/24`
+   
+   - **Subnet 2**:
+     - **Name tag**: `PublicSubnet2`
+     - **VPC**: Selecione `KubernetesVPC`
+     - **Availability Zone**: Escolha uma outra zona (por exemplo, `us-east-1b`)
+     - **IPv4 CIDR block**: `10.0.2.0/24`
+
+3. Clique em **Create subnet**.
+
+#### Criando um Internet Gateway:
+
+1. Vá para **Internet Gateways** e clique em **Create internet gateway**.
+2. Defina os seguintes parâmetros:
+   - **Name tag**: `KubernetesIGW`
+3. Clique em **Create internet gateway**.
+4. Após a criação, selecione o **Internet Gateway** e clique em **Actions > Attach to VPC**.
+5. Selecione a **KubernetesVPC** e clique em **Attach internet gateway**.
+
+#### Configurando a Tabela de Rotas:
+
+1. Vá para **Route Tables**.
+2. Selecione a tabela de rotas automaticamente criada para sua VPC.
+3. Clique em **Routes > Edit routes**.
+4. Adicione uma nova rota:
+   - **Destination**: `0.0.0.0/0`
+   - **Target**: Selecione o **KubernetesIGW** (Internet Gateway criado).
+5. Salve as alterações.
+
+#### Associando as Sub-redes à Tabela de Rotas:
+
+1. Clique em **Subnet Associations > Edit subnet associations**.
+2. Marque as sub-redes **PublicSubnet1** e **PublicSubnet2**.
+3. Salve as alterações.
+
+### 1.2 Criando Grupos de Segurança
 
 Nesta primeira etapa criaremos duas Virtual Private Cloud (VPC) na AWS, as quais permitirão a criação de uma rede isolada entre as intâncias que criaremos posteriormente.
 
@@ -54,7 +115,7 @@ Nesta primeira etapa criaremos duas Virtual Private Cloud (VPC) na AWS, as quais
 3. **Defina a outbound rule tanto na vpc do control plane quanto na worker**:
    - All traffic `0.0.0.0/0`
 
-### 1.2 Criando Instâncias EC2
+### 1.3 Criando Instâncias EC2
 
 1. **Crie 3 instâncias EC2**: 1 Control Plane e 2 Workers.
    - Control Plane: `t2.medium` (Ubuntu 22.04).
@@ -62,7 +123,7 @@ Nesta primeira etapa criaremos duas Virtual Private Cloud (VPC) na AWS, as quais
 2. **Anexe o grupo de segurança apropriado** para cada instância.
 3. **Gere ou selecione uma chave SSH** para acessar as instâncias.
 
-### 1.3 Conectando-se via SSH
+### 1.4 Conectando-se via SSH
 
 Certifique-se de que as permissões da chave .pem estão configuradas corretamente:
 
