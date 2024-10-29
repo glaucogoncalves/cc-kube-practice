@@ -4,31 +4,6 @@ Esta prática foi elaborada como um exercício da disciplina [Computação em Nu
 
 A atividade trabalha a configuração e implantação de um cluster Kubernetes na AWS usando instâncias EC2, bem como a implantação de uma aplicação PHP/MySQL, como exemplo. A configuração envolve a criação da infraestrutura na AWS, instalação do Kubernetes e a implantação da aplicação.
 
-## **Sumário**
-
-- [**Kubernetes Cluster com PHP/MySQL no AWS EC2**](#kubernetes-cluster-com-phpmysql-no-aws-ec2)
-  - [Para informações mais detalhadas, acesse o documento da aula](#para-informações-mais-detalhadas-acesse-o-documento-da-aula)
-  - [**Sumário**](#sumário)
-  - [**Pré-requisitos**](#pré-requisitos)
-  - [**1. Criando e Configurando a Infraestrutura no AWS**](#1-criando-e-configurando-a-infraestrutura-no-aws)
-    - [1.1 Criando uma VPC](#11-criando-uma-vpc-personalizada)
-    - [1.2 Criando Grupos de Segurança](#12-criando-grupos-de-segurança)
-    - [1.3 Criando Instâncias EC2](#13-criando-instâncias-ec2)
-    - [1.4 Conectando-se via SSH](#14-conectando-se-via-ssh)
-  - [**2. Instalando o Kubernetes**](#2-instalando-o-kubernetes)
-    - [2.1 Instalando containerd](#21-instalando-containerd)
-    - [Opcional](#opcional)
-    - [2.2 Inicializando o Cluster Kubernetes no Control Plane](#22-inicializando-o-cluster-kubernetes-no-control-plane)
-    - [2.3 Conectando os Workers ao Cluster](#23-conectando-os-workers-ao-cluster)
-  - [**3. Implantando o MySQL e a Aplicação PHP**](#3-implantando-o-mysql-e-a-aplicação-php)
-    - [3.1 Implantação do MySQL](#31-implantação-do-mysql)
-    - [3.2 Implantação da Aplicação PHP](#32-implantação-da-aplicação-php)
-  - [**4. Acessando a Aplicação**](#4-acessando-a-aplicação)
-  - [**5. Troubleshooting**](#5-troubleshooting)
-  - [5.1 Pod em estado Pending](#51-pod-em-estado-pending)
-    - [5.2 Erro de Conexão ao MySQL](#52-erro-de-conexão-ao-mysql)
----
-
 ## **Pré-requisitos**
 
 - Conta AWS ativa.
@@ -140,7 +115,8 @@ ssh -i /caminho/para/sua-chave.pem ubuntu@<IP-PUBLICO-DA-EC2>
 ## **2. Instalando o Kubernetes**
 
 ### 2.1 Preparando o ambiente
-Adicione o mapeamento de IP ao nome do host no arquivo de hosts de todos os três nós, e faça isso em todas as 3 máquinas
+
+**Clone este repositório em cada uma das VMs criadas**. Em seguida, adicione o mapeamento de IP ao nome do host no arquivo de hosts de todos os três nós, e faça isso em todas as 3 máquinas
 
 ```bash 
 sudo vim /etc/hosts
