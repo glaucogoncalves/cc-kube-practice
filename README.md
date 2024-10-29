@@ -138,9 +138,8 @@ ssh -i /caminho/para/sua-chave.pem ubuntu@<IP-PUBLICO-DA-EC2>
 ```
 
 ## **2. Instalando o Kubernetes**
-### 2.1 Instalando containerd
 
-### Opcional
+### 2.1 Preparando o ambiente
 Adicione o mapeamento de IP ao nome do host no arquivo de hosts de todos os três nós, e faça isso em todas as 3 máquinas
 
 ```bash 
@@ -164,8 +163,8 @@ Execute os seguintes comandos em todas as instâncias EC2 (Control Plane e Worke
 sudo swapoff -a
 sudo apt update
 ```
-
-Crie os documentos executaveis `containerd-install.sh` e `k8s-install.sh` e cole o conteúdo no arquivo
+### 2.2 Instalando o containerd
+Usaremos os scripts `containerd-install.sh` e `k8s-install.sh`, que estão neste repositório. Siga as instruções a seguir.
 
 ```bash
 vim ./containerd-install.sh
