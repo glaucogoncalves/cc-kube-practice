@@ -80,13 +80,13 @@ Nesta primeira etapa criaremos duas Virtual Private Cloud (VPC) na AWS, as quais
 1. **Acesse o Console AWS** e vá para **VPC > Security Groups**.
 2. **Crie dois grupos de segurança e configure as inbound rules**:
    - **Control Plane Security Group**:
-     - SSH (porta 22): `0.0.0.0/0`
-     - TCP (porta 6443): `0.0.0.0/0`
-     - TCP (portas 2379-2380, 10250-10259): CIDR da VPC
+     - SSH (porta **22**): `0.0.0.0/0`
+     - TCP (porta **6443**): `0.0.0.0/0`
+     - TCP (portas **2379-2380**, **10250-10259**): CIDR da VPC
    - **Worker Security Group**:
-     - SSH (porta 22): `0.0.0.0/0`
-     - TCP (porta 10250): CIDR da VPC
-     - TCP (portas 30000-32767): `0.0.0.0/0`
+     - SSH (porta **22**): `0.0.0.0/0`
+     - TCP (porta **10250**): CIDR da VPC
+     - TCP (portas **30000-32767**): `0.0.0.0/0`
 3. **Defina a outbound rule tanto na vpc do control plane quanto na worker**:
    - All traffic `0.0.0.0/0`
 
@@ -121,7 +121,7 @@ ssh -i /caminho/para/sua-chave.pem ubuntu@<IP-PUBLICO-DA-EC2>
 ```bash 
 sudo vim /etc/hosts
 ``` 
-![alt text](image.png)
+![alt text](./images/image.png)
 
 No terminal, substituiremos o ip por um nome de host amigável. Execute o comando a seguir, mas substitua control-plane por worker1 e worker2 , ao executar em terminais respectivos.
 
@@ -142,9 +142,6 @@ sudo apt update
 ### 2.2 Instalando o containerd
 Usaremos os scripts `containerd-install.sh` e `k8s-install.sh`, que estão neste repositório. Siga as instruções a seguir.
 
-```bash
-vim ./containerd-install.sh
-``` 
 Torne o arquivo executavel
 ```bash
 chmod u+x ./containerd-install.sh
@@ -155,9 +152,6 @@ service containerd status
 ``` 
 
 repita este processo para o kubernetes
-```bash
-vim ./k8s-install.ssh
-``` 
 
 ```bash
 chmod u+x ./k8s-install.sh
@@ -172,7 +166,7 @@ service kubelet status
 No Control Plane, inicialize o cluster Kubernetes:
 
 ```bash
-sudo kubeadm init --pod-network-cidr=10.244.0.0/16
+sudo kubeadm init
 ```
 Configure o kubectl:
 
@@ -189,7 +183,7 @@ No Control Plane, gere o comando kubeadm join:
 ```bash
 kubeadm token create --print-join-command
 ```
-Execute esse comando nos Workers para conectá-los ao cluster.
+Execute esse comando nos Workers com o prefixo `sudo` para conectá-los ao cluster.
 ## **3. Implantando o MySQL e a Aplicação PHP**
 ### 3.1 Implantação do MySQL
 
