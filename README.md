@@ -82,7 +82,7 @@ Nesta etapa, criaremos uma VPC (Virtual Private Cloud) personalizada para isolar
 Nesta primeira etapa criaremos duas Virtual Private Cloud (VPC) na AWS, as quais permitirão a criação de uma rede isolada entre as intâncias que criaremos posteriormente.
 
 1. **Acesse o Console AWS** e vá para **VPC > Security Groups**.
-2. **Crie dois grupos de segurança e configure as inbound rules**:
+2. Crie dois grupos de segurança **Control Plane Security Group**, associando-os à VPC **KubernetesVPC** e configurando suas **inbound rules** como abaixo:
    - **Control Plane Security Group**:
      - SSH (porta **22**): `0.0.0.0/0`
      - TCP (porta **6443**): `0.0.0.0/0`
@@ -103,8 +103,10 @@ Nesta primeira etapa criaremos duas Virtual Private Cloud (VPC) na AWS, as quais
 1. **Crie 3 instâncias EC2**: 1 Control Plane e 2 Workers.
    - Control Plane: `t2.medium` (Ubuntu 22.04).
    - Workers: `t2.large` (Ubuntu 22.04).
-2. **Anexe o grupo de segurança apropriado** para cada instância.
-3. **Gere ou selecione uma chave SSH** para acessar as instâncias.
+2. **Anexe a VPC criada** para cada instância.
+3. **Anexe a Sub-rede criada** para cada instância.
+4. **Anexe o grupo de segurança apropriado** para cada instância.
+5. **Gere ou selecione uma chave SSH** para acessar as instâncias.
 
 ### 1.4 Conectando-se via SSH
 
