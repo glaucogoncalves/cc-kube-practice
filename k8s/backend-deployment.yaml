@@ -30,9 +30,10 @@ metadata:
   name: backend-service
   namespace: backend
 spec:
-  type: ClusterIP
+  type: NodePort
   ports:
-    - port: 5000
+    - nodePort: 31559
+      port: 5000
       targetPort: 5000
   selector:
     app: backend
