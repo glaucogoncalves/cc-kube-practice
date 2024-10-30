@@ -100,14 +100,14 @@ Nesta primeira etapa criaremos duas Virtual Private Cloud (VPC) na AWS, as quais
 
 ### 1.3 Criando Instâncias EC2
 
-1. **Crie 3 instâncias EC2**: 1 Control Plane e 2 Workers.
+1. **Crie 3 instâncias EC2**: 1 Control Plane e 2 Workers. Selecione as opções abaixo:
    - Control Plane: `t2.medium` (Ubuntu 22.04).
    - Workers: `t2.large` (Ubuntu 22.04).
-2. **Anexe a VPC criada** para cada instância.
-3. **Anexe a Sub-rede criada** para cada instância.
-4. **Anexe o grupo de segurança apropriado** para cada instância.
-5. Marque a opção **criar IP público**.
-6. **Gere ou selecione uma chave SSH** para acessar as instâncias.
+   - **Anexe a VPC criada** para cada instância (nas configurações de rede clique em **Edit**)
+   - **Anexe a Sub-rede criada** para cada instância.
+   - **Anexe o grupo de segurança apropriado** para cada instância.
+   - Marque a opção **Automatic Public IP**.
+   - **Gere ou selecione uma chave SSH** para acessar as instâncias.
 
 ### 1.4 Conectando-se via SSH
 
@@ -129,13 +129,15 @@ ssh -i /caminho/para/sua-chave.pem ubuntu@<IP-PUBLICO-DA-EC2>
 Nesta seção, vamos configurar o ambiente nas máquinas (Control Plane e Workers) para que todas se reconheçam mutuamente através de nomes de host amigáveis, em vez de endereços IP. Isso simplifica a comunicação entre os nós no cluster Kubernetes, especialmente quando configuramos as Workers para se conectarem ao Control Plane.
 
 1. Clone o Repositório
-Primeiro, clone este repositório em cada uma das VMs criadas (Control Plane e Workers) para garantir que todos os arquivos e configurações necessárias estejam acessíveis em todos os nós.
+
+Primeiro, **clone este repositório** em cada uma das VMs criadas (Control Plane e Workers) para garantir que todos os arquivos e configurações necessárias estejam acessíveis em todos os nós.
 
 ```bash
 git clone https://github.com/glaucogoncalves/cc-kube-practice.git
 ```
 
 2. Adicione o Mapeamento de IP para Nomes de Host
+
 Em cada VM, precisamos atualizar o arquivo `/etc/hosts` para mapear os IPs internos para nomes de host amigáveis (control-plane, worker1 e worker2). Este mapeamento permite que os nós se comuniquem usando esses nomes em vez de endereços IP, o que é útil para simplificar a configuração e permitir futuras mudanças de IP sem alterar as configurações.
 
 Para fazer isso:
@@ -163,6 +165,7 @@ Exemplo:
 Essa configuração deve ser feita em todas as três máquinas para que todas reconheçam o nome de host das demais.
 
 3. Configurando o Nome do Host para Cada Máquina
+
 Defina o nome do host de cada VM para um nome descritivo (control-plane, worker1 e worker2) para facilitar a identificação das máquinas e ajudar na organização do cluster.
 
 No terminal, execute o comando correspondente ao nome de host da máquina:
@@ -183,22 +186,15 @@ sudo hostnamectl set-hostname worker2
 ```
 Desconecte e reconecte o SSH após a alteração para ver o novo nome do host refletido no terminal.
 
-4. Propósito do Mapeamento de IP e Nome de Host no Kubernetes
-Esse mapeamento de IP e nome de host facilita a configuração do cluster Kubernetes, especialmente durante a conexão dos Workers ao Control Plane. Quando adicionamos os Workers ao cluster, o Kubernetes utiliza o nome de host (ou o endereço configurado) para se conectar ao Control Plane e gerenciar o cluster.
+4. Configurações Básicas em Todas as Instâncias
 
-Por que isso é importante?
-
-Simplifica a configuração: Referir-se aos nós por nomes amigáveis é mais fácil do que lembrar e configurar com base em IPs.
-Facilita alterações futuras: Se um IP de uma instância mudar, podemos simplesmente atualizar o `/etc/hosts` sem precisar modificar outras configurações no Kubernetes.
-Garante comunicação interna confiável: Para os Workers se comunicarem com o Control Plane, especialmente em uma VPC isolada, o nome de host é resolvido para o IP apropriado, o que simplifica a configuração e manutenção.
-
-5. Configurações Básicas em Todas as Instâncias
 Execute os seguintes comandos em todas as instâncias (Control Plane e Workers) para aplicar configurações básicas e preparar o ambiente para o Kubernetes.
 
 ```bash
 sudo apt-get update
 sudo apt-get install -y apt-transport-https curl
 ```
+
 Esses comandos garantirão que o sistema esteja atualizado e que o (HTTPS) esteja configurado, o que é necessário para instalar componentes adicionais, como kubeadm, kubelet e kubectl no próximo passo.
 
 Execute os seguintes comandos em todas as instâncias EC2 (Control Plane e Workers):
@@ -207,14 +203,16 @@ Execute os seguintes comandos em todas as instâncias EC2 (Control Plane e Worke
 sudo swapoff -a
 sudo apt update
 ```
+
 ### 2.2 Instalando o containerd
 Usaremos os scripts `containerd-install.sh` e `k8s-install.sh`, que estão neste repositório. Siga as instruções a seguir.
 
-Torne o arquivo executavel
+Execute o script de instalação do containerd
 ```bash
-chmod u+x ./containerd-install.sh
+./containerd-install.sh
 ```
-Execute e depois cheque os status, deve estar "activate"
+
+Depois cheque os status, deve estar "activate"
 ```bash
 service containerd status
 ``` 
