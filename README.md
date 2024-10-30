@@ -106,7 +106,8 @@ Nesta primeira etapa criaremos duas Virtual Private Cloud (VPC) na AWS, as quais
 2. **Anexe a VPC criada** para cada instância.
 3. **Anexe a Sub-rede criada** para cada instância.
 4. **Anexe o grupo de segurança apropriado** para cada instância.
-5. **Gere ou selecione uma chave SSH** para acessar as instâncias.
+5. Marque a opção **criar IP público**.
+6. **Gere ou selecione uma chave SSH** para acessar as instâncias.
 
 ### 1.4 Conectando-se via SSH
 
