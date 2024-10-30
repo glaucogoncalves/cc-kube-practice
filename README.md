@@ -86,7 +86,7 @@ Nesta primeira etapa criaremos duas Virtual Private Cloud (VPC) na AWS, as quais
    - **Control Plane Security Group**:
      - SSH (porta **22**): `0.0.0.0/0`
      - TCP (porta **6443**): `0.0.0.0/0`
-     - TCP (portas **2379-2380**, **10250-10259**): CIDR da VPC `172.31.0.0/16`
+     - TCP (portas **2379-2380**, **10250-10259**): CIDR da VPC
      - TCP (porta **30000**): frontend `0.0.0.0/0`
      - TCP (porta **31559**): backend `0.0.0.0/0`
    - **Worker Security Group**:
@@ -212,20 +212,21 @@ Execute o script de instalação do containerd
 ./containerd-install.sh
 ```
 
-Depois cheque os status, deve estar "activate"
+Depois cheque o campo **Active**, deve estar escrito "active (running)"
 ```bash
 service containerd status
 ``` 
 
-repita este processo para o kubernetes
+Repita este processo para o kubernetes
 
 ```bash
-chmod u+x ./k8s-install.sh
+./k8s-install.sh
 ```
 
+Execute o comando abaixo, depois cheque o campo **Loaded**, deve estar "loaded" e o campo **Active** deve estar "dead"
 ```bash
 service kubelet status
-``` 
+```
 
 ### 2.2 Inicializando o Cluster Kubernetes no Control Plane
 
@@ -234,6 +235,7 @@ No Control Plane, inicialize o cluster Kubernetes:
 ```bash
 sudo kubeadm init
 ```
+
 Configure o kubectl:
 
 ```bash
