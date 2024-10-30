@@ -82,11 +82,15 @@ Nesta primeira etapa criaremos duas Virtual Private Cloud (VPC) na AWS, as quais
    - **Control Plane Security Group**:
      - SSH (porta **22**): `0.0.0.0/0`
      - TCP (porta **6443**): `0.0.0.0/0`
-     - TCP (portas **2379-2380**, **10250-10259**): CIDR da VPC
+     - TCP (portas **2379-2380**, **10250-10259**): CIDR da VPC `172.31.0.0/16`
+     - TCP (porta **30000**): frontend `0.0.0.0/0`
+     - TCP (porta **31559**): backend `0.0.0.0/0`
    - **Worker Security Group**:
      - SSH (porta **22**): `0.0.0.0/0`
      - TCP (porta **10250**): CIDR da VPC
      - TCP (portas **30000-32767**): `0.0.0.0/0`
+     - TCP (porta **30000**): frontend `0.0.0.0/0`
+     - TCP (porta **31559**): backend `0.0.0.0/0`
 3. **Defina a outbound rule tanto na vpc do control plane quanto na worker**:
    - All traffic `0.0.0.0/0`
 
@@ -114,24 +118,81 @@ ssh -i /caminho/para/sua-chave.pem ubuntu@<IP-PUBLICO-DA-EC2>
 
 ## **2. Instalando o Kubernetes**
 
-### 2.1 Preparando o ambiente
+### 2.1 Preparando o Ambiente
+Nesta seção, vamos configurar o ambiente nas máquinas (Control Plane e Workers) para que todas se reconheçam mutuamente através de nomes de host amigáveis, em vez de endereços IP. Isso simplifica a comunicação entre os nós no cluster Kubernetes, especialmente quando configuramos as Workers para se conectarem ao Control Plane.
 
-**Clone este repositório em cada uma das VMs criadas**. Em seguida, adicione o mapeamento de IP ao nome do host no arquivo de hosts de todos os três nós, e faça isso em todas as 3 máquinas
-
-```bash 
-sudo vim /etc/hosts
-``` 
-![alt text](./images/image.png)
-
-No terminal, substituiremos o ip por um nome de host amigável. Execute o comando a seguir, mas substitua control-plane por worker1 e worker2 , ao executar em terminais respectivos.
+1. Clone o Repositório
+Primeiro, clone este repositório em cada uma das VMs criadas (Control Plane e Workers) para garantir que todos os arquivos e configurações necessárias estejam acessíveis em todos os nós.
 
 ```bash
-$ sudo hostnamectl set-hostname control-plane
-$ sudo hostnamectl set-hostname worker1
-$ sudo hostnamectl set-hostname worker2
+git clone https://github.com/glaucogoncalves/cc-kube-practice.git
 ```
 
-Desconecte-se do SSH e conecte-se novamente para que os novos nomes apareçam.
+2. Adicione o Mapeamento de IP para Nomes de Host
+Em cada VM, precisamos atualizar o arquivo `/etc/hosts` para mapear os IPs internos para nomes de host amigáveis (control-plane, worker1 e worker2). Este mapeamento permite que os nós se comuniquem usando esses nomes em vez de endereços IP, o que é útil para simplificar a configuração e permitir futuras mudanças de IP sem alterar as configurações.
+
+Para fazer isso:
+
+Edite o arquivo de hosts em cada máquina:
+
+```bash
+sudo vim /etc/hosts
+```
+Adicione o mapeamento de IP para cada nome de host.
+
+No arquivo `/etc/hosts`, adicione linhas semelhantes a estas (substituindo `<IP_CONTROL_PLANE>`, `<IP_WORKER1>`, e `<IP_WORKER2>` pelos IPs internos das suas instâncias):
+
+```plaintext
+<IP_CONTROL_PLANE> control-plane
+<IP_WORKER1> worker1
+<IP_WORKER2> worker2
+```
+Exemplo:
+```plaintext
+10.0.0.1 control-plane
+10.0.0.2 worker1
+10.0.0.3 worker2
+```
+Essa configuração deve ser feita em todas as três máquinas para que todas reconheçam o nome de host das demais.
+
+3. Configurando o Nome do Host para Cada Máquina
+Defina o nome do host de cada VM para um nome descritivo (control-plane, worker1 e worker2) para facilitar a identificação das máquinas e ajudar na organização do cluster.
+
+No terminal, execute o comando correspondente ao nome de host da máquina:
+
+### No Control Plane:
+
+```bash
+
+sudo hostnamectl set-hostname control-plane
+```
+### No Worker 1:
+```bash
+sudo hostnamectl set-hostname worker1
+```
+### No Worker 2:
+```bash
+sudo hostnamectl set-hostname worker2
+```
+Desconecte e reconecte o SSH após a alteração para ver o novo nome do host refletido no terminal.
+
+4. Propósito do Mapeamento de IP e Nome de Host no Kubernetes
+Esse mapeamento de IP e nome de host facilita a configuração do cluster Kubernetes, especialmente durante a conexão dos Workers ao Control Plane. Quando adicionamos os Workers ao cluster, o Kubernetes utiliza o nome de host (ou o endereço configurado) para se conectar ao Control Plane e gerenciar o cluster.
+
+Por que isso é importante?
+
+Simplifica a configuração: Referir-se aos nós por nomes amigáveis é mais fácil do que lembrar e configurar com base em IPs.
+Facilita alterações futuras: Se um IP de uma instância mudar, podemos simplesmente atualizar o `/etc/hosts` sem precisar modificar outras configurações no Kubernetes.
+Garante comunicação interna confiável: Para os Workers se comunicarem com o Control Plane, especialmente em uma VPC isolada, o nome de host é resolvido para o IP apropriado, o que simplifica a configuração e manutenção.
+
+5. Configurações Básicas em Todas as Instâncias
+Execute os seguintes comandos em todas as instâncias (Control Plane e Workers) para aplicar configurações básicas e preparar o ambiente para o Kubernetes.
+
+```bash
+sudo apt-get update
+sudo apt-get install -y apt-transport-https curl
+```
+Esses comandos garantirão que o sistema esteja atualizado e que o (HTTPS) esteja configurado, o que é necessário para instalar componentes adicionais, como kubeadm, kubelet e kubectl no próximo passo.
 
 Execute os seguintes comandos em todas as instâncias EC2 (Control Plane e Workers):
 
@@ -171,11 +232,17 @@ sudo kubeadm init
 Configure o kubectl:
 
 ```bash
-
 mkdir -p $HOME/.kube
 sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
 sudo chown $(id -u):$(id -g) $HOME/.kube/config
 ```
+
+Verificar cluster kubernetes
+
+```bash 
+kubectl get pods -A
+```
+
 ### 2.3 Conectando os Workers ao Cluster
 
 No Control Plane, gere o comando kubeadm join:
@@ -184,141 +251,96 @@ No Control Plane, gere o comando kubeadm join:
 kubeadm token create --print-join-command
 ```
 Execute esse comando nos Workers com o prefixo `sudo` para conectá-los ao cluster.
-## **3. Implantando o MySQL e a Aplicação PHP**
-### 3.1 Implantação do MySQL
 
-Crie o arquivo mysql-deployment.yaml:
+Verificar se nodes foram conectados (rode no control plane)
+```bash 
+kubectl get nodes -A
+```
+## **3. Implantando o MongoDB e a Aplicação React**
+Instruções para Configurar e Executar o Projeto no Kubernetes
+
+### 3.1 Modifique o ConfigMap com o IP Público do Backend
+O frontend-configmap.yaml define o URL do backend que o frontend irá acessar. Localize o arquivo frontend-configmap.yaml e atualize o IP no valor da URL para o IP público do backend do aluno.
 
 ```yaml
 apiVersion: v1
-kind: PersistentVolumeClaim
+kind: ConfigMap
 metadata:
-  name: mysql-pv-claim
-spec:
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 1Gi
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: mysql-service
-spec:
-  ports:
-    - port: 3306
-  selector:
-    app: mysql
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: mysql-deployment
-spec:
-  selector:
-    matchLabels:
-      app: mysql
-  template:
-    metadata:
-      labels:
-        app: mysql
-    spec:
-      containers:
-      - image: mysql:5.7
-        name: mysql
-        env:
-        - name: MYSQL_ROOT_PASSWORD
-          value: "password"
-        - name: MYSQL_DATABASE
-          value: "todo"
-        ports:
-        - containerPort: 3306
-        volumeMounts:
-        - name: mysql-persistent-storage
-          mountPath: /var/lib/mysql
-      volumes:
-      - name: mysql-persistent-storage
-        persistentVolumeClaim:
-          claimName: mysql-pv-claim
+  name: frontend-configmap
+  namespace: frontend
+data:
+  config.js: |
+    window.REACT_APP_BACKEND_URL = "http://<SEU_IP_PUBLICO>:<PORTA_BACKEND>";
 ```
-Implante o MySQL:
+Substitua `<SEU_IP_PUBLICO>` pelo IP público onde o backend está sendo executado.
+Substitua `<PORTA_BACKEND>` pela porta correta (como `31559` se estiver usando NodePort).
+Salve o arquivo após fazer essa alteração.
 
-```bash
-kubectl apply -f mysql-deployment.yaml
-```
-### 3.2 Implantação da Aplicação PHP
-
-Crie o arquivo php-deployment.yaml:
+### 3.2 Modifique o Service se Necessário
+Verifique o arquivo `frontend-service.yaml` e assegure-se de que a configuração está correta para expor o frontend. No caso de estar usando NodePort, você pode modificar o número da porta externa se necessário.
 
 ```yaml
 apiVersion: v1
 kind: Service
 metadata:
-  name: php-service
+  name: frontend-service
+  namespace: frontend
 spec:
   type: NodePort
+  selector:
+    app: frontend
   ports:
-    - port: 80
-      targetPort: 80
-      nodePort: 30589
-  selector:
-    app: php
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: php-deployment
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: php
-  template:
-    metadata:
-      labels:
-        app: php
-    spec:
-      containers:
-      - image: lucasmatni01/php-todo:latest
-        name: php
-        ports:
-        - containerPort: 80
-        env:
-        - name: MYSQL_HOST
-          value: "mysql-service"
-        - name: MYSQL_USER
-          value: "root"
-        - name: MYSQL_PASSWORD
-          value: "password"
-        - name: MYSQL_DATABASE
-          value: "todo"
+    - port: 3000        # Porta interna no cluster
+      targetPort: 3000   # Porta onde o contêiner escuta
+      nodePort: 30000    # Porta exposta no nó (pode ser ajustada)
 ```
-Implante a aplicação PHP:
+### 3.3 Aplicar os Arquivos no Cluster
+Após realizar as alterações necessárias, aplique os arquivos no cluster Kubernetes com os comandos abaixo:
 
-```bash
-kubectl apply -f php-deployment.yaml
+```sh
+Copiar código
+kubectl apply -f namespaces.yaml
+kubectl apply -f frontend-configmap.yaml
+kubectl apply -f frontend-deployment.yaml
+kubectl apply -f frontend-service.yaml
+kubectl apply -f backend-deployment.yaml
+kubectl apply -f mongodb-deployment.yaml
+kubectl apply -f mongodb-pv.yaml
+kubectl apply -f mongodb-pvc.yaml
 ```
-## **4. Acessando a Aplicação**
+Esses comandos irão configurar o ConfigMap, criar o Deployment do frontend e expor o frontend através do Service.
 
-    Obtenha o IP público da sua instância EC2 (Worker).
-    No navegador, acesse a aplicação via NodePort:
+## **4. Verifique a Configuração**
+Após aplicar os arquivos, use os comandos abaixo para verificar se os recursos foram criados corretamente:
 
-``` vbnet
-
-http://<IP-PUBLICO-DO-WORKER>:30589
+Verificar o ConfigMap
+```sh
+kubectl get configmap frontend-configmap -n frontend -o yaml
 ```
+Certifique-se de que o config.js tem a URL correta do backend.
 
-## **5. Troubleshooting**
-## 5.1 Pod em estado Pending
-
-    Causa: Pode ser um problema com volumes persistentes ou falta de recursos no nó.
-    Solução: Verifique o status do pod com:
-
-```bash
-kubectl describe pod <nome-do-pod>
+Verificar o Deployment
+```sh
+kubectl get deployment frontend -n frontend
+kubectl describe deployment frontend -n frontend
 ```
+Verifique se o Deployment está em execução e se o contêiner está pronto.
 
-### 5.2 Erro de Conexão ao MySQL
+Verificar o Service
+```sh
+kubectl get service frontend-service -n frontend
+```
+Certifique-se de que o Service está expondo a aplicação na porta correta.
 
-    Solução: Verifique se o MySQL está rodando e se as credenciais estão corretas.
+## **5. Acessar o Frontend**
+Após a configuração, você pode acessar o frontend através do IP do nó e a porta definida no Service.
+
+URL de Acesso: `http://<SEU_IP_PUBLICO>:30000`
+Certifique-se de substituir `<SEU_IP_PUBLICO>` pelo IP público do nó onde o Kubernetes está executando.
+
+## **6. Resumo de Alterações Necessárias**
+No frontend-configmap.yaml: Altere `<SEU_IP_PUBLICO>` e `<PORTA_BACKEND>` na linha `window.REACT_APP_BACKEND_URL`.
+
+No frontend-service.yaml (opcional): Ajuste nodePort se necessário para expor o frontend em uma porta diferente.
+
+Pronto! Seu ambiente deve estar configurado para executar a aplicação no Kubernetes. Se tiver problemas, verifique os logs e os eventos dos recursos com o comando `kubectl describe pod -n <namespace> <nome-do-pod>` .

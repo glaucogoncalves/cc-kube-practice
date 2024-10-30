@@ -18,20 +18,11 @@ spec:
           image: lucasmatni01/todolist-frontend:latest
           ports:
             - containerPort: 3000
-          env:
-            - name: REACT_APP_BACKEND_URL
-              value: "http://NODE_IP:BACKEND_NODE_PORT" # Substitua por valores reais
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: frontend-service
-  namespace: frontend
-spec:
-  type: NodePort
-  ports:
-    - port: 3000
-      targetPort: 3000
-      nodePort: 30000
-  selector:
-    app: frontend
+          volumeMounts:
+            - name: config-volume
+              mountPath: "/app/build/config.js"
+              subPath: config.js
+      volumes:
+        - name: config-volume
+          configMap:
+            name: frontend-configmap

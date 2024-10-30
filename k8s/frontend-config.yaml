@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: frontend-configmap
+  namespace: frontend
+data:
+  config.js: |
+    window.REACT_APP_BACKEND_URL = "NODE_PUBLIC_IP:NODE_PORT";
