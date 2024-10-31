@@ -14,7 +14,7 @@ spec:
         app: backend
     spec:
       nodeSelector:
-        kubernetes.io/hostname: <your-node-name>
+        kubernetes.io/hostname: worker1
       containers:
         - name: backend
           image: lucasmatni01/todolist-backend:latest
@@ -32,8 +32,7 @@ metadata:
 spec:
   type: NodePort
   ports:
-    - nodePort: 31559
-      port: 5000
+    - port: 5000
       targetPort: 5000
   selector:
     app: backend
