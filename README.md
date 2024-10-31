@@ -385,6 +385,14 @@ spec:
       nodePort: 30000    # Porta exposta no nó (pode ser ajustada)
 ```
 
+Reinicie as aplicações para assegurar as mudanças.
+
+```
+kubectl rollout restart deployment frontend -n frontend
+kubectl rollout restart deployment backend -n backend
+kubectl rollout restart deployment coredns -n kube-system
+```
+
 ## **4. Verifique a Configuração**
 Após aplicar os arquivos, use os comandos abaixo para verificar se os recursos foram criados corretamente:
 
