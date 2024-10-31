@@ -14,14 +14,12 @@ A atividade trabalha a configuração e implantação de um cluster Kubernetes n
 
 ## **1. Criando e Configurando a Infraestrutura no AWS**
 
-
-
 ### 1.1 Criando uma VPC Personalizada
 
 Nesta etapa, criaremos uma VPC (Virtual Private Cloud) personalizada para isolar nossa infraestrutura e ter um melhor controle sobre a rede.
 
 1. Acesse o **Console AWS**.
-2. Vá para **VPC > Your VPCs**.
+2. Navegue até **VPC > Your VPCs**.
 3. Clique em **Create VPC**.
 4. Defina os seguintes parâmetros:
    - **Name tag**: `KubernetesVPC`
@@ -29,26 +27,21 @@ Nesta etapa, criaremos uma VPC (Virtual Private Cloud) personalizada para isolar
    - **Tenancy**: `Default`
 5. Clique em **Create**.
 
-#### Criando Sub-redes:
+---
 
-1. Vá para **Subnets** e clique em **Create subnet**.
-2. Crie duas sub-redes em diferentes zonas de disponibilidade:
+### Criando uma Subnet Pública
 
-   - **Subnet 1**:
-     - **Name tag**: `PublicSubnet1`
-     - **VPC**: Selecione `KubernetesVPC`
-     - **Availability Zone**: Escolha uma zona (por exemplo, `us-east-1a`)
-     - **IPv4 CIDR block**: `10.0.1.0/24`
-   
-   - **Subnet 2**:
-     - **Name tag**: `PublicSubnet2`
-     - **VPC**: Selecione `KubernetesVPC`
-     - **Availability Zone**: Escolha uma outra zona (por exemplo, `us-east-1b`)
-     - **IPv4 CIDR block**: `10.0.2.0/24`
-
+1. Navegue até **Subnets** e clique em **Create subnet**.
+2. Defina os parâmetros abaixo:
+   - **Name tag**: `PublicSubnet`
+   - **VPC**: Selecione `KubernetesVPC`
+   - **Availability Zone**: Escolha uma zona de disponibilidade (por exemplo, `us-east-1a`)
+   - **IPv4 CIDR block**: `10.0.1.0/24`
 3. Clique em **Create subnet**.
 
-#### Criando um Internet Gateway:
+---
+
+### Criando um Internet Gateway
 
 1. Vá para **Internet Gateways** e clique em **Create internet gateway**.
 2. Defina os seguintes parâmetros:
@@ -57,25 +50,18 @@ Nesta etapa, criaremos uma VPC (Virtual Private Cloud) personalizada para isolar
 4. Após a criação, selecione o **Internet Gateway** e clique em **Actions > Attach to VPC**.
 5. Selecione a **KubernetesVPC** e clique em **Attach internet gateway**.
 
-#### Configurando a Tabela de Rotas:
+---
 
-1. Vá para **Route Tables** e clique em **Create Router Table**..
-2. Defina os seguintes parâmetros:
-   - **Name**: `KubernetesRouterTable`
-   - **VPC**: Selecione `KubernetesVPC`
-3. Clique em **Edit routes**.
-4. Adicione uma nova rota:
+### Configurando a Tabela de Rotas
+
+1. Acesse **Route Tables** e selecione a tabela de rotas associada automaticamente à `KubernetesVPC`.
+2. Clique em **Edit routes** e adicione uma nova rota:
    - **Destination**: `0.0.0.0/0`
-   - **Target**: Selecione **Internet Gateway** e na caixa abaixo selecione **KubernetesIGW**.
-5. Salve as alterações.
-
-#### Associando as Sub-redes à Tabela de Rotas:
-
-1. Selecione a sub-rede **PublicSubnet1**
-2. Em **Actions** selecione **Edit router table associations**
-3. Em **Router Table ID** selecione **KubernetesRouterTable**.
+   - **Target**: Selecione o `KubernetesIGW`
+3. **Associar a Tabela de Rotas à Subnet Pública**:
+   - Vá para **Subnets**, selecione `PublicSubnet`.
+   - Em **Actions**, selecione **Edit route table association** e escolha a tabela de rotas configurada.
 4. Salve as alterações.
-5. Repita os passos acima para a **PublicSubnet2**.
 
 ### 1.2 Criando Grupos de Segurança
 
@@ -301,47 +287,55 @@ Verificar se nodes foram conectados (rode no control plane)
 kubectl get nodes -A
 ```
 
-### 2.4 Instalar o Weave Net como Plugin de Rede (CNI)
+### 2.4  Configurando o CNI (Weave Net)
 Para permitir a comunicação entre os pods no cluster, você deve configurar um plugin de rede CNI. No caso do Weave Net, siga o passo abaixo:
 
-Execute o comando para aplicar o Weave Net como o plugin de rede:
+1. Instale o CNI Weave Net:
+Acesse o Control Plane via SSH e execute o comando:
 
-```bash
+```sh
 kubectl apply -f https://github.com/weaveworks/weave/releases/download/v2.8.1/weave-daemonset-k8s.yaml
 ```
-Aguarde alguns minutos para que o Weave Net seja implementado e inicializado nos nós do cluster.
+Esse comando irá instalar o Weave Net como plugin de rede. Verifique os pods no namespace kube-system:
 
-Verifique se o Weave Net está funcionando corretamente listando os pods no namespace kube-system:
-
-```bash
+```sh
 kubectl get pods -n kube-system -o wide
 ```
+Aguarde até que os pods weave-net estejam no status Running.
 Os pods weave-net devem estar no status "Running".
 
 ## **3. Implantando uma aplicação**
 
 Abaixo iremos configurar e executar uma aplicação completa no Kubernetes. Para isso, use os arquivos no diretório **k8s**.
 
+```sh
+cd cc-kube-practice/k8s
+```
+
 ### 3.1 Aplicar os Arquivos no Cluster
 
-Aplique os arquivos no cluster Kubernetes com os comandos abaixo:
+Para garantir que a implantação da aplicação siga uma ordem lógica, aplique os arquivos na seguinte sequência no Control Plane:
 
-```sh
-kubectl apply -f namespaces.yaml
-kubectl apply -f frontend-configmap.yaml
-kubectl apply -f frontend-deployment.yaml
-kubectl apply -f frontend-service.yaml
+1. Criando Namespaces
+- Execute:
+  ```sh
+  kubectl apply -f namespaces.yaml
+  ```
+
+2. Configurando o Backend e MongoDB:
+
+- Primeiro, configure o backend e banco de dados:
+ ```sh
 kubectl apply -f backend-deployment.yaml
 kubectl apply -f mongodb-deployment.yaml
 kubectl apply -f mongodb-pv.yaml
 kubectl apply -f mongodb-pvc.yaml
-```
+ ```
 
-Esses comandos irão configurar o ConfigMap, criar o Deployment do frontend e expor o frontend através de um Service.
+3. Configurando o Frontend:
+- Ajuste o ConfigMap com o IP público do backend antes de implantar o frontend:
 
-### 3.2 Modifique o ConfigMap com o IP Público do Backend
-
-Para saber qual a sua NodePort do serviço backend, digite:
+- Para saber qual a sua NodePort do serviço backend, digite:
 
 ```
 kubectl get svc -n backend backend-service
@@ -358,43 +352,36 @@ Exemplo de saida do comando:
 
 O IP público é o IP da instancia EC2 que está localizado o backend.
 
-O frontend-configmap.yaml define o URL do backend que o frontend irá acessar. Localize o arquivo frontend-configmap.yaml e atualize o IP no valor da URL para o IP público do backend do aluno.
-```yaml
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: frontend-configmap
-  namespace: frontend
+- Abra o frontend-configmap.yaml e substitua `<SEU_IP_PUBLICO>` pelo IP público do backend e `<PORTA_BACKEND>` pela porta NodePort usada.
+
+Exemplo:
+
+ ```yaml
 data:
   config.js: |
     window.REACT_APP_BACKEND_URL = "http://<SEU_IP_PUBLICO>:<PORTA_BACKEND>";
-```
-Substitua `<SEU_IP_PUBLICO>` pelo IP público onde o backend está sendo executado.
-Substitua `<PORTA_BACKEND>` pela porta correta (como `31559` se estiver usando NodePort).
-Salve o arquivo após fazer essa alteração.
+ ```
+Em seguida, implante o ConfigMap e o frontend:
 
-### 3.3 Modifique o Service se Necessário
-Verifique o arquivo `frontend-service.yaml` e assegure-se de que a configuração está correta para expor o frontend. No caso de estar usando NodePort, você pode modificar o número da porta externa se necessário.
+ ```sh
+kubectl apply -f frontend-configmap.yaml
+kubectl apply -f frontend-deployment.yaml
+kubectl apply -f frontend-service.yaml
+ ```
+4. Verifique o Deploy:
 
-```yaml
-apiVersion: v1
-kind: Service
-metadata:
-  name: frontend-service
-  namespace: frontend
-spec:
-  type: NodePort
-  selector:
-    app: frontend
-  ports:
-    - port: 3000        # Porta interna no cluster
-      targetPort: 3000   # Porta onde o contêiner escuta
-      nodePort: 30000    # Porta exposta no nó (pode ser ajustada)
-```
+Certifique-se de que todos os componentes estão rodando:
+ ```sh
+kubectl get pods -A
+kubectl get services -A
+ ```
 
-Reinicie as aplicações para assegurar as mudanças.
+Esses comandos irão configurar o ConfigMap, criar o Deployment do frontend e expor o frontend através de um Service.
 
-```
+5. Ajuste do ConfigMap e Reinício dos Pods
+Para refletir qualquer mudança no ConfigMap, é necessário reiniciar os deployments:
+
+```sh
 kubectl rollout restart deployment frontend -n frontend
 kubectl rollout restart deployment backend -n backend
 kubectl rollout restart deployment coredns -n kube-system
