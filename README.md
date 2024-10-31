@@ -317,9 +317,41 @@ Os pods weave-net devem estar no status "Running".
 ## **3. Implantando o MongoDB e a Aplicação React**
 Instruções para Configurar e Executar o Projeto no Kubernetes
 
-### 3.1 Modifique o ConfigMap com o IP Público do Backend
-O frontend-configmap.yaml define o URL do backend que o frontend irá acessar. Localize o arquivo frontend-configmap.yaml e atualize o IP no valor da URL para o IP público do backend do aluno.
+### 3.1 Aplicar os Arquivos no Cluster
+Aplique os arquivos no cluster Kubernetes com os comandos abaixo:
 
+```sh
+kubectl apply -f namespaces.yaml
+kubectl apply -f frontend-configmap.yaml
+kubectl apply -f frontend-deployment.yaml
+kubectl apply -f frontend-service.yaml
+kubectl apply -f backend-deployment.yaml
+kubectl apply -f mongodb-deployment.yaml
+kubectl apply -f mongodb-pv.yaml
+kubectl apply -f mongodb-pvc.yaml
+```
+Esses comandos irão configurar o ConfigMap, criar o Deployment do frontend e expor o frontend através do Service.
+
+### 3.2 Modifique o ConfigMap com o IP Público do Backend
+
+Para saber qual a sua NodePort do serviço backend, digite:
+
+```
+kubectl get svc -n backend backend-service
+```
+
+Exemplo de saida do comando:
+| Nome do Serviço    | Tipo       | IP do Cluster | IP Externo | Portas           | Idade |
+|--------------------|------------|---------------|------------|------------------|-------|
+| backend-service    | NodePort   | 10.98.12.247  | `<none>`   | 5000:32663/TCP   | 32m   |
+
+- **Tipo**: `NodePort` permite o acesso ao serviço fora do cluster na porta `32663` dos nós do cluster.
+- **IP do Cluster**: `10.98.12.247` é o IP interno do serviço dentro do cluster.
+- **Porta**: O serviço está disponível na porta `5000` dentro do cluster e exposto externamente na porta `32663`.
+
+O IP público é o IP da instancia EC2 que está localizado o backend.
+
+O frontend-configmap.yaml define o URL do backend que o frontend irá acessar. Localize o arquivo frontend-configmap.yaml e atualize o IP no valor da URL para o IP público do backend do aluno.
 ```yaml
 apiVersion: v1
 kind: ConfigMap
@@ -334,7 +366,7 @@ Substitua `<SEU_IP_PUBLICO>` pelo IP público onde o backend está sendo executa
 Substitua `<PORTA_BACKEND>` pela porta correta (como `31559` se estiver usando NodePort).
 Salve o arquivo após fazer essa alteração.
 
-### 3.2 Modifique o Service se Necessário
+### 3.3 Modifique o Service se Necessário
 Verifique o arquivo `frontend-service.yaml` e assegure-se de que a configuração está correta para expor o frontend. No caso de estar usando NodePort, você pode modificar o número da porta externa se necessário.
 
 ```yaml
@@ -352,20 +384,6 @@ spec:
       targetPort: 3000   # Porta onde o contêiner escuta
       nodePort: 30000    # Porta exposta no nó (pode ser ajustada)
 ```
-### 3.3 Aplicar os Arquivos no Cluster
-Após realizar as alterações necessárias, aplique os arquivos no cluster Kubernetes com os comandos abaixo:
-
-```sh
-kubectl apply -f namespaces.yaml
-kubectl apply -f frontend-configmap.yaml
-kubectl apply -f frontend-deployment.yaml
-kubectl apply -f frontend-service.yaml
-kubectl apply -f backend-deployment.yaml
-kubectl apply -f mongodb-deployment.yaml
-kubectl apply -f mongodb-pv.yaml
-kubectl apply -f mongodb-pvc.yaml
-```
-Esses comandos irão configurar o ConfigMap, criar o Deployment do frontend e expor o frontend através do Service.
 
 ## **4. Verifique a Configuração**
 Após aplicar os arquivos, use os comandos abaixo para verificar se os recursos foram criados corretamente:
@@ -392,8 +410,8 @@ Certifique-se de que o Service está expondo a aplicação na porta correta.
 ## **5. Acessar o Frontend**
 Após a configuração, você pode acessar o frontend através do IP do nó e a porta definida no Service.
 
-URL de Acesso: `http://<SEU_IP_PUBLICO>:30000`
-Certifique-se de substituir `<SEU_IP_PUBLICO>` pelo IP público do nó onde o Kubernetes está executando.
+URL de Acesso: `http://<SEU_IP_PUBLICO_FRONTEND>:30000`
+Certifique-se de substituir `<SEU_IP_PUBLICO_FRONTEND>` pelo IP público do nó onde o Frontend está executando.
 
 ## **6. Resumo de Alterações Necessárias**
 No frontend-configmap.yaml: Altere `<SEU_IP_PUBLICO>` e `<PORTA_BACKEND>` na linha `window.REACT_APP_BACKEND_URL`.
