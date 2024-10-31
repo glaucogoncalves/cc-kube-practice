@@ -52,16 +52,25 @@ Nesta etapa, criaremos uma VPC (Virtual Private Cloud) personalizada para isolar
 
 ---
 
-### Configurando a Tabela de Rotas
-
-1. Acesse **Route Tables** e selecione a tabela de rotas associada automaticamente à `KubernetesVPC`.
-2. Clique em **Edit routes** e adicione uma nova rota:
+#### Configurando a Tabela de Rotas:
+1. Vá para **Route Tables** e clique em **Create Router Table**..
+2. Defina os seguintes parâmetros:
+   - **Name**: `KubernetesRouterTable`
+   - **VPC**: Selecione `KubernetesVPC`
+3. Clique em **Edit routes**.
+4. Adicione uma nova rota:
    - **Destination**: `0.0.0.0/0`
-   - **Target**: Selecione o `KubernetesIGW`
-3. **Associar a Tabela de Rotas à Subnet Pública**:
-   - Vá para **Subnets**, selecione `PublicSubnet`.
-   - Em **Actions**, selecione **Edit route table association** e escolha a tabela de rotas configurada.
+   - **Target**: Selecione **Internet Gateway** e na caixa abaixo selecione **KubernetesIGW**.
+5. Salve as alterações.
+
+#### Associando as Sub-redes à Tabela de Rotas:
+
+1. Selecione a sub-rede **PublicSubnet1**
+2. Em **Actions** selecione **Edit router table associations**
+3. Em **Router Table ID** selecione **KubernetesRouterTable**.
 4. Salve as alterações.
+5. Repita os passos acima para a **PublicSubnet2**.
+
 
 ### 1.2 Criando Grupos de Segurança
 
