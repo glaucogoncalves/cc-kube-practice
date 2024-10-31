@@ -89,16 +89,16 @@ Nesta primeira etapa criaremos duas Virtual Private Cloud (VPC) na AWS, as quais
      - TCP (portas **2379-2380**, **10250-10259**): CIDR da VPC
      - TCP (porta **30000**): frontend `0.0.0.0/0`
      - TCP (porta **31559**): backend `0.0.0.0/0`
-     - TCP (porta **6784**): WeaveNet `172.31.0.0/16`
-     - UDP (porta **6783-6784**): WeaveNet `172.31.0.0/16`
+     - TCP (porta **6784**): WeaveNet CIDR da VPC
+     - UDP (porta **6783-6784**): WeaveNet CIDR da VPC
    - **Worker Security Group**:
      - SSH (porta **22**): `0.0.0.0/0`
      - TCP (porta **10250**): CIDR da VPC
      - TCP (portas **30000-32767**): `0.0.0.0/0`
      - TCP (porta **30000**): frontend `0.0.0.0/0`
      - TCP (porta **31559**): backend `0.0.0.0/0`
-     - TCP (porta **6784**): WeaveNet `172.31.0.0/16`
-     - UDP (porta **6783-6784**): WeaveNet `172.31.0.0/16`
+     - TCP (porta **6784**): WeaveNet CIDR da VPC
+     - UDP (porta **6783-6784**): WeaveNet CIDR da VPC
 3. **Defina a outbound rule tanto na vpc do control plane quanto na worker**:
    - All traffic `0.0.0.0/0`
 
@@ -318,10 +318,12 @@ kubectl get pods -n kube-system -o wide
 ```
 Os pods weave-net devem estar no status "Running".
 
-## **3. Implantando o MongoDB e a Aplicação React**
-Instruções para Configurar e Executar o Projeto no Kubernetes
+## **3. Implantando uma aplicação**
+
+Abaixo iremos configurar e executar uma aplicação completa no Kubernetes. Para isso, use os arquivos no diretório **k8s**.
 
 ### 3.1 Aplicar os Arquivos no Cluster
+
 Aplique os arquivos no cluster Kubernetes com os comandos abaixo:
 
 ```sh
@@ -334,7 +336,8 @@ kubectl apply -f mongodb-deployment.yaml
 kubectl apply -f mongodb-pv.yaml
 kubectl apply -f mongodb-pvc.yaml
 ```
-Esses comandos irão configurar o ConfigMap, criar o Deployment do frontend e expor o frontend através do Service.
+
+Esses comandos irão configurar o ConfigMap, criar o Deployment do frontend e expor o frontend através de um Service.
 
 ### 3.2 Modifique o ConfigMap com o IP Público do Backend
 
