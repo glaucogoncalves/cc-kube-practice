@@ -89,12 +89,16 @@ Nesta primeira etapa criaremos duas Virtual Private Cloud (VPC) na AWS, as quais
      - TCP (portas **2379-2380**, **10250-10259**): CIDR da VPC
      - TCP (porta **30000**): frontend `0.0.0.0/0`
      - TCP (porta **31559**): backend `0.0.0.0/0`
+     - TCP (porta **6784**): WeaveNet `172.31.0.0/16`
+     - UDP (porta **6783-6784**): WeaveNet `172.31.0.0/16`
    - **Worker Security Group**:
      - SSH (porta **22**): `0.0.0.0/0`
      - TCP (porta **10250**): CIDR da VPC
      - TCP (portas **30000-32767**): `0.0.0.0/0`
      - TCP (porta **30000**): frontend `0.0.0.0/0`
      - TCP (porta **31559**): backend `0.0.0.0/0`
+     - TCP (porta **6784**): WeaveNet `172.31.0.0/16`
+     - UDP (porta **6783-6784**): WeaveNet `172.31.0.0/16`
 3. **Defina a outbound rule tanto na vpc do control plane quanto na worker**:
    - All traffic `0.0.0.0/0`
 
