@@ -215,10 +215,43 @@ Execute o script de instalação do containerd
 Depois cheque o campo **Active**, deve estar escrito "active (running)"
 ```bash
 service containerd status
-``` 
+```
+### Acessar o arquivo config.toml do containerd
+Abra o arquivo config.toml do containerd para edição:
 
-Repita este processo para o kubernetes
+```bash
+sudo nano /etc/containerd/config.toml
+```
+Dentro do arquivo, procure pela seguinte seção:
 
+```toml
+[plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc.options]
+  SystemdCgroup = false
+```
+Alterne o valor de SystemdCgroup para true (se já estiver definido, verifique para garantir que o valor seja true):
+
+```toml
+SystemdCgroup = true
+```
+Salve e saia do editor:
+
+Se estiver usando o nano, pressione CTRL + O para salvar e, em seguida, CTRL + X para sair.
+
+2. Reiniciar o Serviço containerd
+Após salvar as mudanças, reinicie o serviço containerd para aplicar as novas configurações:
+
+```bash
+sudo systemctl restart containerd
+```
+Para garantir que o containerd está ativo e em execução, verifique o status:
+
+```bash
+sudo systemctl status containerd
+```
+O status deve aparecer como "active (running)". 
+
+### 2.3 Instalando kubelet, kubectl e kubeadm.
+Execute o script de instalação do kubernetes.
 ```bash
 ./k8s-install.sh
 ```
@@ -263,6 +296,24 @@ Verificar se nodes foram conectados (rode no control plane)
 ```bash 
 kubectl get nodes -A
 ```
+
+### 2.4 Instalar o Weave Net como Plugin de Rede (CNI)
+Para permitir a comunicação entre os pods no cluster, você deve configurar um plugin de rede CNI. No caso do Weave Net, siga o passo abaixo:
+
+Execute o comando para aplicar o Weave Net como o plugin de rede:
+
+```bash
+kubectl apply -f https://github.com/weaveworks/weave/releases/download/v2.8.1/weave-daemonset-k8s.yaml
+```
+Aguarde alguns minutos para que o Weave Net seja implementado e inicializado nos nós do cluster.
+
+Verifique se o Weave Net está funcionando corretamente listando os pods no namespace kube-system:
+
+```bash
+kubectl get pods -n kube-system -o wide
+```
+Os pods weave-net devem estar no status "Running".
+
 ## **3. Implantando o MongoDB e a Aplicação React**
 Instruções para Configurar e Executar o Projeto no Kubernetes
 
@@ -305,7 +356,6 @@ spec:
 Após realizar as alterações necessárias, aplique os arquivos no cluster Kubernetes com os comandos abaixo:
 
 ```sh
-Copiar código
 kubectl apply -f namespaces.yaml
 kubectl apply -f frontend-configmap.yaml
 kubectl apply -f frontend-deployment.yaml
