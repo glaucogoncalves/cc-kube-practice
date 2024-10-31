@@ -5,4 +5,4 @@ metadata:
   namespace: frontend
 data:
   config.js: |
-    window.REACT_APP_BACKEND_URL = "NODE_PUBLIC_IP:31559";
+    window.REACT_APP_BACKEND_URL = "NODE_PUBLIC_IP:NODEPORT_BACKEND_SERVICE";
