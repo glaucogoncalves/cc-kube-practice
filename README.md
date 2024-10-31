@@ -79,7 +79,7 @@ Nesta primeira etapa criaremos dois grupos de segurança na AWS, as quais permit
    - **Control Plane Security Group**:
      - SSH (porta **22**): `0.0.0.0/0`
      - TCP (porta **6443**): `0.0.0.0/0`
-     - TCP (portas **2379-2380**, **10250-10259**): CIDR da VPC
+     - TCP (portas **2379-2380**, **10250-10259**): CIDR da VPC `172.31.0.0/16`
      - TCP (porta **30000**): frontend `0.0.0.0/0`
      - TCP (porta **31559**): backend `0.0.0.0/0`
      - TCP (porta **6784**): WeaveNet CIDR da VPC
