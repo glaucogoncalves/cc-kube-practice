@@ -120,6 +120,11 @@ Para conectar-se a uma instância EC2 via SSH:
 ssh -i /caminho/para/sua-chave.pem ubuntu@<IP-PUBLICO-DA-EC2>
 ```
 
+### 1.5 Crie um IP elástico
+
+Crie um IP elástico e associe-o à máquina Worker 1.
+
+
 ## **2. Instalando o Kubernetes**
 
 ### 2.1 Preparando o Ambiente
@@ -359,7 +364,7 @@ Exemplo de saida do comando:
 
 O IP público é o IP da instancia EC2 que está localizado o backend.
 
-- Abra o frontend-configmap.yaml e substitua `<SEU_IP_PUBLICO>` pelo IP público do backend e `<PORTA_BACKEND>` pela porta NodePort usada.
+- Abra o frontend-configmap.yaml e substitua `<SEU_IP_PUBLICO>` pelo IP elástico definido para o Worker 1 e `<PORTA_BACKEND>` pela porta NodePort usada.
 
 Exemplo:
 
