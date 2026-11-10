@@ -364,7 +364,7 @@ Exemplo de saida do comando:
 
 O IP público é o IP da instancia EC2 que está localizado o backend.
 
-- Abra o frontend-configmap.yaml e substitua `<SEU_IP_PUBLICO>` pelo IP elástico definido para o Worker 1 e `<PORTA_BACKEND>` pela porta NodePort usada.
+- Abra o frontend-configmap.yaml e substitua `<SEU_IP_PUBLICO>` pelo **IP elástico definido para o Worker 1** e `<PORTA_BACKEND>` pela porta NodePort usada.
 
 Exemplo:
 
