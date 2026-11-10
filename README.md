@@ -98,8 +98,8 @@ Nesta primeira etapa criaremos dois grupos de segurança na AWS, as quais permit
 ### 1.3 Criando Instâncias EC2
 
 1. **Crie 3 instâncias EC2**: 1 Control Plane e 2 Workers. Selecione as opções abaixo:
-   - Control Plane: `t2.medium` (Ubuntu 22.04).
-   - Workers: `t2.large` (Ubuntu 22.04).
+   - Control Plane: `t2.medium` (Ubuntu 24.04).
+   - Workers: `t2.large` (Ubuntu 24.04). O armazenamento deve ser de no mínimo 20 GB.
    - **Anexe a VPC criada** para cada instância (nas configurações de rede clique em **Edit**)
    - **Anexe a Sub-rede criada** para cada instância.
    - **Anexe o grupo de segurança apropriado** para cada instância.
